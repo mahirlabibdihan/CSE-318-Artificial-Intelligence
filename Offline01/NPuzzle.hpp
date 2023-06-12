@@ -38,38 +38,22 @@ public:
                 Board *curr_board = pq.top().second;
                 pq.pop();
 
-                // cout << curr_board->getBoard();
-                // cout << getHeuristicCost(curr_board, type) << endl;
-                // if (pq.size() > 10)
-                // {
-                //     break;
-                // }
                 if (!getHeuristicCost(curr_board, type))
                 {
-                    // cout << "RETURN" << endl;
                     goal_board = curr_board;
                     return;
                 }
+
+                int dx[] = {-1, 1, 0, 0};
+                int dy[] = {0, 0, -1, 1};
                 Board *new_board = nullptr;
-                new_board = curr_board->slideDown();
-                if (new_board != nullptr)
+                for (int i = 0; i < 4; i++)
                 {
-                    pq.push({-(new_board->getMoves() + getHeuristicCost(new_board, type)), new_board});
-                }
-                new_board = curr_board->slideUp();
-                if (new_board != nullptr)
-                {
-                    pq.push({-(new_board->getMoves() + getHeuristicCost(new_board, type)), new_board});
-                }
-                new_board = curr_board->slideLeft();
-                if (new_board != nullptr)
-                {
-                    pq.push({-(new_board->getMoves() + getHeuristicCost(new_board, type)), new_board});
-                }
-                new_board = curr_board->slideRight();
-                if (new_board != nullptr)
-                {
-                    pq.push({-(new_board->getMoves() + getHeuristicCost(new_board, type)), new_board});
+                    new_board = curr_board->slide(dx[i], dy[i]);
+                    if (new_board != nullptr)
+                    {
+                        pq.push({-(new_board->getMoves() + getHeuristicCost(new_board, type)), new_board});
+                    }
                 }
             }
         }

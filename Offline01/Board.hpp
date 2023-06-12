@@ -73,13 +73,22 @@ public:
     {
         return parent;
     }
-    Board *slideDown()
+    // slide down   : -1  0
+    // slide up     :  1  0
+    // slide right  :  0  1
+    // slide left   :  0 -1
+    Board *slide(int dx, int dy)
     {
-        if (b_row == 0)
+        int new_row = b_row - dx;
+        int new_col = b_col - dy;
+        int old_row = b_row;
+        int old_col = b_col;
+
+        if (new_row < 0 || new_row >= n_dim || new_col < 0 || new_col >= n_dim)
         {
             return nullptr;
         }
-        else if (parent != nullptr && parent->b_row == b_row - 1 && parent->b_col == b_col)
+        else if (parent != nullptr && parent->b_row == new_row && parent->b_col == new_col)
         {
             return nullptr;
         }
@@ -87,105 +96,22 @@ public:
         {
             Board *new_board = new Board(*this);
 
-            new_board->m_cost -= new_board->distRowCol(new_board->b_row - 1, new_board->b_col);
-            new_board->h_cost -= new_board->isWrongPosition(new_board->b_row - 1, new_board->b_col);
+            new_board->m_cost -= new_board->distRowCol(new_row, new_col);
+            new_board->h_cost -= new_board->isWrongPosition(new_row, new_col);
 
-            swap(new_board->grid[b_row][b_col], new_board->grid[b_row - 1][b_col]);
-            new_board->b_row--;
+            swap(new_board->grid[old_row][old_col], new_board->grid[new_row][new_col]);
+            new_board->b_row = new_row;
+            new_board->b_col = new_col;
 
-            new_board->m_cost += new_board->distRowCol(new_board->b_row + 1, new_board->b_col);
-            new_board->h_cost += new_board->isWrongPosition(new_board->b_row + 1, new_board->b_col);
-
-            new_board->parent = this;
-            new_board->n_moves++;
-            return new_board;
-        }
-    }
-    Board *slideUp()
-    {
-        if (b_row == n_dim - 1)
-        {
-            return nullptr;
-        }
-        else if (parent != nullptr && parent->b_row == b_row + 1 && parent->b_col == b_col)
-        {
-            return nullptr;
-        }
-        else
-        {
-            Board *new_board = new Board(*this);
-
-            new_board->m_cost -= new_board->distRowCol(new_board->b_row + 1, new_board->b_col);
-            new_board->h_cost -= new_board->isWrongPosition(new_board->b_row + 1, new_board->b_col);
-
-            swap(new_board->grid[b_row][b_col], new_board->grid[b_row + 1][b_col]);
-            new_board->b_row++;
-
-            new_board->m_cost += new_board->distRowCol(new_board->b_row - 1, new_board->b_col);
-            new_board->h_cost += new_board->isWrongPosition(new_board->b_row - 1, new_board->b_col);
+            new_board->m_cost += new_board->distRowCol(old_row, old_col);
+            new_board->h_cost += new_board->isWrongPosition(old_row, old_col);
 
             new_board->parent = this;
             new_board->n_moves++;
             return new_board;
         }
     }
-    Board *slideRight()
-    {
 
-        if (b_col == 0)
-        {
-            return nullptr;
-        }
-        else if (parent != nullptr && parent->b_row == b_row && parent->b_col == b_col - 1)
-        {
-            return nullptr;
-        }
-        else
-        {
-            Board *new_board = new Board(*this);
-
-            new_board->m_cost -= new_board->distRowCol(new_board->b_row, new_board->b_col - 1);
-            new_board->h_cost -= new_board->isWrongPosition(new_board->b_row, new_board->b_col - 1);
-
-            swap(new_board->grid[b_row][b_col], new_board->grid[b_row][b_col - 1]);
-            new_board->b_col--;
-
-            new_board->m_cost += new_board->distRowCol(new_board->b_row, new_board->b_col + 1);
-            new_board->h_cost += new_board->isWrongPosition(new_board->b_row, new_board->b_col + 1);
-
-            new_board->parent = this;
-            new_board->n_moves++;
-            return new_board;
-        }
-    }
-    Board *slideLeft()
-    {
-        if (b_col == n_dim - 1)
-        {
-            return nullptr;
-        }
-        else if (parent != nullptr && parent->b_row == b_row && parent->b_col == b_col + 1)
-        {
-            return nullptr;
-        }
-        else
-        {
-            Board *new_board = new Board(*this);
-
-            new_board->m_cost -= new_board->distRowCol(new_board->b_row, new_board->b_col + 1);
-            new_board->h_cost -= new_board->isWrongPosition(new_board->b_row, new_board->b_col + 1);
-
-            swap(new_board->grid[b_row][b_col], new_board->grid[b_row][b_col + 1]);
-            new_board->b_col++;
-
-            new_board->m_cost += new_board->distRowCol(new_board->b_row, new_board->b_col - 1);
-            new_board->h_cost += new_board->isWrongPosition(new_board->b_row, new_board->b_col - 1);
-
-            new_board->parent = this;
-            new_board->n_moves++;
-            return new_board;
-        }
-    }
     int getInversionCount()
     {
         int count = 0;
@@ -270,11 +196,9 @@ public:
     }
     int distRowCol(int i, int j)
     {
-        // cout << "(" << i << "," << j << ")=>" << this->get(i, j) << endl;
         int n = this->getDimension();
         int row = (this->get(i, j) - 1) / n;                             // O index
         int col = this->get(i, j) % n ? this->get(i, j) % n - 1 : n - 1; // O index
-        // cout << "(" << row << "," << col << ")" << endl;
         return abs(row - i) + abs(col - j);
     }
     int getManhattanDistance()
@@ -292,7 +216,6 @@ public:
                 if (this->get(i, j) != 0)
                 {
                     cost += distRowCol(i, j);
-                    // cout << this->get(i, j) << " " << cost << endl;
                 }
             }
         }
